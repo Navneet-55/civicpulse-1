@@ -13,93 +13,20 @@ import {
   ArrowDownRight,
   FileText
 } from 'lucide-react';
-import { Persona, PolicyData } from '../types';
+import { Persona, PolicyData, SimulationResponse } from '../types';
 
 interface SimulationResultsProps {
   onBack: () => void;
   policyData: PolicyData;
+  results?: SimulationResponse | null;
 }
 
-const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyData }) => {
+const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyData, results }) => {
   const [filter, setFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
 
-  // Mock Data
-  const personas: Persona[] = [
-    {
-      id: '#AGE-8201',
-      role: 'Senior Citizen',
-      iconType: 'senior',
-      impactLevel: 'High',
-      quote: "Fixed income retiree, relies entirely on walkable services and public transit for healthcare.",
-      painPoints: [
-        "Transit reroute adds 400m walking distance to pharmacy.",
-        "Rising rent risks displacement from long-term home."
-      ],
-      adjustments: [
-        "Add shuttle service for the final mile."
-      ],
-      confidence: 94
-    },
-    {
-      id: '#FAM-3392',
-      role: 'Single Parent',
-      iconType: 'parent',
-      impactLevel: 'High',
-      quote: "Works two jobs, rigid schedule, relies on reliable bus routes for childcare drop-offs.",
-      painPoints: [
-        "Schedule changes cause missed childcare pickups.",
-        "Fare hike consumes 15% of grocery budget."
-      ],
-      adjustments: [
-        "Implement 90-min free transfer window."
-      ],
-      confidence: 89
-    },
-    {
-      id: '#WRK-1045',
-      role: 'Low-Income Worker',
-      subRole: 'Service Industry',
-      iconType: 'worker',
-      impactLevel: 'Medium',
-      quote: "Hourly wage earner in service industry, highly sensitive to transit cost changes.",
-      painPoints: [
-        "Reduced bus frequency increases commute time by 30 mins."
-      ],
-      adjustments: [
-        "Subsidized monthly passes for residents under threshold."
-      ],
-      confidence: 91
-    },
-    {
-      id: '#MOB-2210',
-      role: 'Person with Disability',
-      iconType: 'disability',
-      impactLevel: 'High',
-      quote: "Mobility challenges, requires accessible infrastructure and level boarding.",
-      painPoints: [
-        "New stops lack proper curb cuts.",
-        "Increased distance to accessible entrances."
-      ],
-      adjustments: [
-        "Ensure all new stops are ADA compliant immediately."
-      ],
-      confidence: 96
-    },
-    {
-      id: '#LNG-9932',
-      role: 'Non-Native Speaker',
-      iconType: 'language',
-      impactLevel: 'Medium',
-      quote: "Recent immigrant, language barriers, difficulty navigating complex permit forms.",
-      painPoints: [
-        "Notices only available in English."
-      ],
-      adjustments: [
-        "Provide multilingual support materials."
-      ],
-      confidence: 88
-    }
-  ];
+  // Fallback if no results exist (shouldn't happen in normal flow due to loader)
+  const personas = results?.personas || [];
+  const score = results?.score || 0;
 
   const getIcon = (type: string) => {
     switch(type) {
@@ -107,7 +34,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
       case 'worker': return <Briefcase className="w-6 h-6 text-emerald-600" />;
       case 'disability': return <Accessibility className="w-6 h-6 text-indigo-600" />;
       case 'language': return <Languages className="w-6 h-6 text-orange-600" />;
-      default: return <Users className="w-6 h-6 text-blue-600" />;
+      case 'senior': return <Users className="w-6 h-6 text-blue-600" />;
+      default: return <Users className="w-6 h-6 text-slate-600" />;
     }
   };
 
@@ -117,7 +45,8 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
       case 'worker': return 'bg-emerald-100';
       case 'disability': return 'bg-indigo-100';
       case 'language': return 'bg-orange-100';
-      default: return 'bg-blue-100';
+      case 'senior': return 'bg-blue-100';
+      default: return 'bg-slate-100';
     }
   };
 
@@ -139,7 +68,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
         
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-          <span onClick={onBack} className="cursor-pointer hover:text-blue-600">Policy Run #2024-05-A</span>
+          <span onClick={onBack} className="cursor-pointer hover:text-blue-600">Assessment Setup</span>
           <span>&gt;</span>
           <span className="text-slate-900 font-medium">Results</span>
         </div>
@@ -159,6 +88,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
                   Source: {policyData.fileName}
                 </span>
               )}
+              <span className="text-xs text-slate-400 ml-auto">
+                Analyzed {personas.length} demographic segments
+              </span>
             </div>
           </div>
           
@@ -167,11 +99,14 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
             <div>
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Empathy Score</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-bold text-slate-900">42</span>
+                <span className="text-5xl font-bold text-slate-900">{score}</span>
                 <span className="text-lg text-slate-400 font-medium">/ 100</span>
               </div>
               <div className="w-32 h-2 bg-slate-100 rounded-full mt-3 overflow-hidden">
-                <div className="w-[42%] h-full bg-blue-500 rounded-full"></div>
+                <div 
+                   className={`h-full rounded-full transition-all duration-1000 ${score > 70 ? 'bg-emerald-500' : score > 50 ? 'bg-orange-500' : 'bg-red-500'}`} 
+                   style={{ width: `${score}%` }}
+                ></div>
               </div>
             </div>
             <div className="text-right">
@@ -180,7 +115,6 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
                 -5%
               </div>
               <p className="text-xs text-slate-400 mt-1">vs. last simulation</p>
-              <button className="text-sm font-semibold text-blue-600 hover:text-blue-700 mt-2">View Analysis</button>
             </div>
           </div>
         </div>
@@ -225,7 +159,7 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
           {filteredPersonas.map((persona) => (
             <div key={persona.id} className="bg-white rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
               
@@ -245,8 +179,9 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
 
               {/* Quote */}
               <div className="px-5 pb-4">
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  <p className="text-sm text-slate-500 italic leading-relaxed">"{persona.quote}"</p>
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-100 relative">
+                  <div className="absolute top-2 left-2 text-3xl text-slate-200 font-serif leading-none">"</div>
+                  <p className="text-sm text-slate-600 italic leading-relaxed relative z-10">{persona.quote}</p>
                 </div>
               </div>
 
@@ -281,11 +216,16 @@ const SimulationResults: React.FC<SimulationResultsProps> = ({ onBack, policyDat
 
               {/* Footer */}
               <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-b-xl">
-                <span className="text-xs text-slate-500 font-medium">Confidence: {persona.confidence}%</span>
-                <button className="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-wide">Details</button>
+                <span className="text-xs text-slate-500 font-medium">AI Confidence: {persona.confidence}%</span>
+                <button className="text-xs font-bold text-blue-600 hover:text-blue-700 uppercase tracking-wide">Analysis</button>
               </div>
             </div>
           ))}
+          {filteredPersonas.length === 0 && (
+             <div className="col-span-full py-12 text-center text-slate-400">
+               <p>No personas found matching this filter.</p>
+             </div>
+          )}
         </div>
 
       </div>

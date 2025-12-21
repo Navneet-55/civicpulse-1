@@ -10,7 +10,7 @@ export interface Persona {
   confidence: number;
 }
 
-export type ViewState = 'dashboard' | 'intake' | 'results' | 'impact';
+export type ViewState = 'dashboard' | 'intake' | 'results' | 'impact' | 'debate';
 
 export interface PolicyData {
   title: string;
@@ -20,4 +20,18 @@ export interface PolicyData {
   fileName?: string;
   fileSize?: string;
   date: string;
+}
+
+export interface SimulationResponse {
+  score: number;
+  personas: Persona[];
+  analysis?: string;
+}
+
+export interface HistoryItem {
+  id: string;
+  prompt: string; // JSON string of PolicyData
+  result: string; // JSON string of SimulationResponse or stub text
+  createdAt: string;
+  userId?: string;
 }

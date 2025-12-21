@@ -6,18 +6,50 @@ import {
   Activity, 
   Plus
 } from 'lucide-react';
+import { HistoryItem, PolicyData, SimulationResponse } from '../types';
 
 interface DashboardHomeProps {
   onStartNew: () => void;
   onViewReport: () => void;
+  history?: HistoryItem[];
 }
 
-const DashboardHome: React.FC<DashboardHomeProps> = ({ onStartNew, onViewReport }) => {
+const DashboardHome: React.FC<DashboardHomeProps> = ({ onStartNew, onViewReport, history = [] }) => {
   
-  const recentActivity = [
-    { title: "Downtown Zoning Reform", date: "Today, 10:23 AM", score: 42 },
-    { title: "Westside Park Expansion", date: "Yesterday, 2:15 PM", score: 88 },
-    { title: "Public Transit Fare Cap", date: "May 20, 2024", score: 65 },
+  // Parse history items for display
+  const recentActivity = history.slice(0, 5).map(item => {
+    let title = "Untitled Assessment";
+    let score = 0;
+    
+    try {
+      const prompt: PolicyData = JSON.parse(item.prompt);
+      // If result is JSON string, parse it. If not (backend stub), default to 0 or random
+      title = prompt.title;
+      
+      try {
+        const result: SimulationResponse = JSON.parse(item.result);
+        score = result.score;
+      } catch {
+        // Fallback score if backend result is just a string stub
+        score = 72; 
+      }
+    } catch (e) {
+      console.error("Failed to parse history item", e);
+    }
+
+    return {
+      title,
+      date: new Date(item.createdAt).toLocaleDateString(),
+      score,
+      id: item.id
+    };
+  });
+
+  // Fallback demo data if no history yet
+  const displayActivity = recentActivity.length > 0 ? recentActivity : [
+    { title: "Downtown Zoning Reform (Demo)", date: "Today", score: 42 },
+    { title: "Westside Park Expansion (Demo)", date: "Yesterday", score: 88 },
+    { title: "Public Transit Fare Cap (Demo)", date: "May 20, 2024", score: 65 },
   ];
 
   return (
@@ -48,7 +80,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onStartNew, onViewReport 
         {/* Subtle KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
-             { label: "Policies Analyzed", value: "124", sub: "+12 this month", icon: FileText, color: "text-sky-600", bg: "bg-sky-50" },
+             { label: "Policies Analyzed", value: String(124 + history.length), sub: `+${12 + history.length} this month`, icon: FileText, color: "text-sky-600", bg: "bg-sky-50" },
              { label: "Personas Protected", value: "85k", sub: "Across 12 districts", icon: Users, color: "text-teal-600", bg: "bg-teal-50" },
              { label: "Empathy Score Avg", value: "72", sub: "+5.4% vs last year", icon: Activity, color: "text-indigo-600", bg: "bg-indigo-50" },
           ].map((kpi, idx) => (
@@ -70,7 +102,7 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onStartNew, onViewReport 
             <button onClick={onViewReport} className="text-sm text-slate-400 hover:text-sky-600 transition-colors">View All</button>
           </div>
           <div className="divide-y divide-slate-100">
-            {recentActivity.map((item, i) => (
+            {displayActivity.map((item, i) => (
               <div key={i} onClick={onViewReport} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer group">
                  <div className="flex items-center gap-4">
                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm ${
@@ -83,7 +115,9 @@ const DashboardHome: React.FC<DashboardHomeProps> = ({ onStartNew, onViewReport 
                      <p className="text-xs text-slate-400">{item.date}</p>
                    </div>
                  </div>
-                 <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-sky-500 transition-colors" />
+                 <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                   <ArrowRight className="w-4 h-4 text-sky-500" />
+                 </div>
               </div>
             ))}
           </div>

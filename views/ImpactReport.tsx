@@ -36,7 +36,7 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
         const opt = {
           margin:       0.5,
           filename:     `Impact-Report-${new Date().toISOString().split('T')[0]}.pdf`,
-          image:        { type: 'jpeg', quality: 0.98 },
+          image:        { type: 'jpeg' as const, quality: 0.98 },
           html2canvas:  { scale: 2, useCORS: true },
           jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
@@ -54,14 +54,14 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
     const pres = new pptxgen();
 
     // Define common styles
-    const slideTitleOpts = { x: 0.5, y: 0.5, w: '90%', fontSize: 24, color: '1e293b', bold: true, fontFace: 'Arial' };
-    const sectionHeaderOpts = { fontSize: 12, color: '94a3b8', bold: true, uppercase: true };
-    const bodyTextOpts = { x: 0.5, y: 1.5, w: '90%', fontSize: 14, color: '334155', fontFace: 'Arial', lineSpacing: 18 };
+    const slideTitleOpts = { x: 0.5, y: 0.5, w: 9, fontSize: 24, color: '1e293b', bold: true, fontFace: 'Arial' };
+    const sectionHeaderOpts = { fontSize: 12, color: '94a3b8', bold: true };
+    const bodyTextOpts = { x: 0.5, y: 1.5, w: 9, fontSize: 14, color: '334155', fontFace: 'Arial', lineSpacing: 18 };
 
     // --- SLIDE 1: Title Slide ---
     let slide = pres.addSlide();
     slide.addText("Impact Assessment Report", { x: 1, y: 2, fontSize: 36, color: '1e293b', bold: true, align: 'center' });
-    slide.addText("Confidential • Draft for Review", { x: 1, y: 1.5, fontSize: 12, color: '64748b', align: 'center', uppercase: true });
+    slide.addText("CONFIDENTIAL • DRAFT FOR REVIEW", { x: 1, y: 1.5, fontSize: 12, color: '64748b', align: 'center' });
     slide.addText(policyData.title, { x: 1, y: 3, fontSize: 18, color: '64748b', align: 'center' });
     slide.addText(`Location: ${policyData.location}  |  Date: ${policyData.date}`, { x: 1, y: 3.5, fontSize: 14, color: '94a3b8', align: 'center' });
     
@@ -81,8 +81,8 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
     slide.addText("2.0 Key Findings", slideTitleOpts);
     
     // Quote box simulation
-    slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 1.2, w: '90%', h: 1.2, fill: { color: 'f8fafc' }, line: { color: '1e293b', width: 3 } });
-    slide.addText(`"The policy as written achieves efficiency goals at the direct expense of equity, with a projected -12% impact on the Quality of Life index for seniors in ${policyData.location}."`, { x: 0.7, y: 1.3, w: '86%', fontSize: 14, color: '1e293b', italic: true });
+    slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 1.2, w: 9, h: 1.2, fill: { color: 'f8fafc' }, line: { color: '1e293b', width: 3 } });
+    slide.addText(`"The policy as written achieves efficiency goals at the direct expense of equity, with a projected -12% impact on the Quality of Life index for seniors in ${policyData.location}."`, { x: 0.7, y: 1.3, w: 8.6, fontSize: 14, color: '1e293b', italic: true });
 
     const findingsBullets = [
       { text: "Economic Displacement: Rental costs in affected zones are projected to rise by 22% within 18 months.", options: { bullet: true, breakLine: true } },
@@ -90,7 +90,7 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
       { text: "Communication Gaps: Digital-first public engagement strategies have failed to reach 65% of non-native English speakers.", options: { bullet: true } }
     ];
     
-    slide.addText(findingsBullets, { x: 0.5, y: 3, w: '90%', h: 3, fontSize: 14, color: '334155', lineSpacing: 20 });
+    slide.addText(findingsBullets, { x: 0.5, y: 3, w: 9, h: 3, fontSize: 14, color: '334155', lineSpacing: 20 });
 
     // --- SLIDE 4: 3.0 Demographic Impact Matrix ---
     slide = pres.addSlide();
@@ -98,9 +98,9 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
 
     const tableData = [
       [
-        { text: "Demographic", options: { bold: true, fill: 'f1f5f9', color: '0f172a' } }, 
-        { text: "Impact Score", options: { bold: true, fill: 'f1f5f9', color: '0f172a' } }, 
-        { text: "Primary Risk", options: { bold: true, fill: 'f1f5f9', color: '0f172a' } }
+        { text: "Demographic", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }, 
+        { text: "Impact Score", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }, 
+        { text: "Primary Risk", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }
       ],
       [
         { text: "Senior Citizens" }, 
@@ -119,7 +119,7 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
       ]
     ];
 
-    slide.addTable(tableData, { x: 0.5, y: 1.5, w: '90%', border: { pt: 1, color: 'e2e8f0' }, fontSize: 12 });
+    slide.addTable(tableData, { x: 0.5, y: 1.5, w: 9, border: { pt: 1, color: 'e2e8f0' }, fontSize: 12 });
 
     // --- SLIDE 5: 4.0 Recommendations ---
     slide = pres.addSlide();
@@ -137,7 +137,7 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
       { text: "Require all public notices to be distributed via mail in English, Spanish, and Vietnamese, alongside digital channels.", options: { fontSize: 12, color: '475569' } }
     ];
 
-    slide.addText(recs, { x: 0.5, y: 2, w: '90%', h: 4 });
+    slide.addText(recs, { x: 0.5, y: 2, w: 9, h: 4 });
 
     pres.writeFile({ fileName: `Impact-Report-${new Date().toISOString().split('T')[0]}.pptx` });
   };

@@ -1,13 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import PolicyIntake from './views/PolicyIntake';
 import SimulationResults from './views/SimulationResults';
 import ImpactReport from './views/ImpactReport';
 import DashboardHome from './views/DashboardHome';
-import { ViewState, PolicyData } from './types';
+import DebateView from './views/DebateView';
+import { ViewState, PolicyData, SimulationResponse, HistoryItem } from './types';
+import { ApiService } from './services/api';
 
 export default function App() {
   const [currentView, setCurrentView] = useState<ViewState>('dashboard');
+  const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   
   // Default State
   const [policyData, setPolicyData] = useState<PolicyData>({
@@ -18,13 +22,39 @@ export default function App() {
     date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
   });
 
+  const [simulationResults, setSimulationResults] = useState<SimulationResponse | null>(null);
+
+  // Load history on mount
+  useEffect(() => {
+    const loadHistory = async () => {
+      const data = await ApiService.getHistory();
+      setHistory(data);
+    };
+    loadHistory();
+  }, []);
+
   const handleNavigate = (view: ViewState) => {
     setCurrentView(view);
   };
 
-  const handleSimulationStart = (data: PolicyData) => {
+  const handleSimulationStart = async (data: PolicyData) => {
+    setIsLoading(true);
     setPolicyData(data);
-    setCurrentView('results');
+    
+    try {
+      const results = await ApiService.runSimulation(data);
+      setSimulationResults(results);
+      
+      // Refresh history silently
+      ApiService.getHistory().then(setHistory);
+      
+      setCurrentView('results');
+    } catch (error) {
+      console.error("Simulation failed:", error);
+      alert("Failed to run simulation. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,16 +68,24 @@ export default function App() {
           <DashboardHome 
             onStartNew={() => setCurrentView('intake')} 
             onViewReport={() => setCurrentView('impact')}
+            history={history}
           />
         )}
         {currentView === 'intake' && (
-          <PolicyIntake onRunSimulation={handleSimulationStart} />
+          <PolicyIntake 
+            onRunSimulation={handleSimulationStart} 
+            isLoading={isLoading}
+          />
         )}
         {currentView === 'results' && (
           <SimulationResults 
             onBack={() => setCurrentView('intake')} 
             policyData={policyData} 
+            results={simulationResults}
           />
+        )}
+        {currentView === 'debate' && (
+          <DebateView policyData={policyData} />
         )}
         {currentView === 'impact' && (
           <ImpactReport policyData={policyData} />

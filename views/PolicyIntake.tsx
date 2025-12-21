@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Plus, UploadCloud, Play, X, MapPin, FileText, Trash2 } from 'lucide-react';
+import { Plus, UploadCloud, Play, X, MapPin, FileText, Trash2, Loader2 } from 'lucide-react';
 import { PolicyData } from '../types';
 
 interface PolicyIntakeProps {
   onRunSimulation: (data: PolicyData) => void;
+  isLoading?: boolean;
 }
 
 const PREDEFINED_DEMOGRAPHICS = [
@@ -20,7 +21,7 @@ const PREDEFINED_DEMOGRAPHICS = [
   "Commuters"
 ];
 
-const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
+const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation, isLoading = false }) => {
   const [title, setTitle] = useState("Downtown Zoning Reform Initiative 2024");
   const [description, setDescription] = useState("");
   const [demographics, setDemographics] = useState(['Low Income', 'Single Parents']);
@@ -103,7 +104,7 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto bg-gray-50 p-8">
+    <div className="flex-1 overflow-y-auto bg-gray-50 p-8 animate-fadeIn">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -123,26 +124,28 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
 
           <form className="space-y-6" onSubmit={handleSubmit}>
             
-            {/* Policy Name - Simplified Label */}
+            {/* Policy Name */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Policy Name</label>
               <input 
                 type="text" 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 placeholder-slate-400"
+                disabled={isLoading}
+                className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 placeholder-slate-400 disabled:opacity-60"
                 placeholder="Ex: Downtown Zoning Reform Initiative 2024"
               />
             </div>
 
-            {/* Description - Simplified Label */}
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
               <textarea 
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 placeholder-slate-400 resize-none"
+                disabled={isLoading}
+                className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 placeholder-slate-400 resize-none disabled:opacity-60"
                 placeholder="Paste the executive summary or key policy points here..."
               ></textarea>
             </div>
@@ -150,7 +153,7 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
             {/* Grid for Location & Demographics */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* Location - Simplified Label */}
+              {/* Location */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
                 <div className="relative">
@@ -158,20 +161,22 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
                     type="text" 
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 placeholder-slate-400"
+                    disabled={isLoading}
+                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 placeholder-slate-400 disabled:opacity-60"
                     placeholder="Enter City, State..."
                   />
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
                 </div>
               </div>
 
-              {/* Demographics - Simplified Label */}
+              {/* Demographics */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Demographics</label>
                 <div className="space-y-3">
                   <select 
                     onChange={handleAddDemographic}
-                    className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 bg-white cursor-pointer"
+                    disabled={isLoading}
+                    className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-2 focus:ring-sky-200 outline-none transition-all text-slate-900 bg-white cursor-pointer disabled:opacity-60"
                     defaultValue=""
                   >
                     <option value="" disabled>Select demographics...</option>
@@ -184,7 +189,7 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
                     {demographics.map(tag => (
                       <span key={tag} className="inline-flex items-center px-2.5 py-1 rounded-md bg-sky-50 text-sm font-medium text-sky-700 border border-sky-100">
                         {tag}
-                        <button type="button" onClick={() => removeDemographic(tag)} className="ml-1.5 hover:text-sky-900">
+                        <button type="button" onClick={() => removeDemographic(tag)} disabled={isLoading} className="ml-1.5 hover:text-sky-900">
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </span>
@@ -194,16 +199,16 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
               </div>
             </div>
 
-            {/* File Upload - Simplified Label */}
+            {/* File Upload */}
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Upload Document</label>
               <div 
-                onClick={handleFileClick}
+                onClick={!isLoading ? handleFileClick : undefined}
                 className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center transition-all cursor-pointer group ${
                   selectedFile 
                     ? 'border-sky-200 bg-sky-50' 
                     : 'border-slate-200 hover:bg-slate-50'
-                }`}
+                } ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 <input 
                   type="file" 
@@ -211,6 +216,7 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
                   onChange={handleFileChange}
                   className="hidden" 
                   accept=".pdf,.doc,.docx,.txt"
+                  disabled={isLoading}
                 />
 
                 {selectedFile ? (
@@ -246,10 +252,24 @@ const PolicyIntake: React.FC<PolicyIntakeProps> = ({ onRunSimulation }) => {
             <div className="pt-4">
               <button 
                 type="submit"
-                className="inline-flex items-center gap-2 bg-sky-500 hover:bg-sky-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-sm shadow-sky-200"
+                disabled={isLoading}
+                className={`inline-flex items-center gap-2 bg-sky-500 text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-sm shadow-sky-200 ${
+                  isLoading 
+                    ? 'opacity-80 cursor-wait' 
+                    : 'hover:bg-sky-600'
+                }`}
               >
-                <Play className="w-4 h-4 fill-current" />
-                Run Empathy Simulation
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Processing Simulation...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4 fill-current" />
+                    <span>Run Empathy Simulation</span>
+                  </>
+                )}
               </button>
             </div>
 

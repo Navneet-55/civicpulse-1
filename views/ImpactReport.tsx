@@ -4,7 +4,6 @@ import {
   FileText, 
   Layout, 
   AlignLeft, 
-  Printer,
   Calendar,
   MapPin,
   Paperclip,
@@ -13,8 +12,6 @@ import {
 } from 'lucide-react';
 import { PolicyData } from '../types';
 import pptxgen from 'pptxgenjs';
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
 
 interface ImpactReportProps {
   policyData: PolicyData;
@@ -22,124 +19,104 @@ interface ImpactReportProps {
 
 const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
   const [viewMode, setViewMode] = useState<'dashboard' | 'document'>('dashboard');
-  const [isExporting, setIsExporting] = useState(false);
-
-  const handleExportPDF = () => {
-    setIsExporting(true);
-    // Switch to document view to ensure the detailed report is rendered
-    setViewMode('document');
-    
-    // Allow time for DOM to update
-    setTimeout(() => {
-      const element = document.getElementById('impact-report-content');
-      if (element) {
-        const opt = {
-          margin:       0.5,
-          filename:     `Impact-Report-${new Date().toISOString().split('T')[0]}.pdf`,
-          image:        { type: 'jpeg' as const, quality: 0.98 },
-          html2canvas:  { scale: 2, useCORS: true },
-          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-        
-        html2pdf().set(opt).from(element).save().then(() => {
-          setIsExporting(false);
-        });
-      } else {
-        setIsExporting(false);
-      }
-    }, 500);
-  };
 
   const handleExportPPT = () => {
-    const pres = new pptxgen();
+    try {
+      // Handle potential default export for pptxgenjs
+      // @ts-ignore
+      const PptxGen = pptxgen.default || pptxgen;
+      const pres = new PptxGen();
 
-    // Define common styles
-    const slideTitleOpts = { x: 0.5, y: 0.5, w: 9, fontSize: 24, color: '1e293b', bold: true, fontFace: 'Arial' };
-    const sectionHeaderOpts = { fontSize: 12, color: '94a3b8', bold: true };
-    const bodyTextOpts = { x: 0.5, y: 1.5, w: 9, fontSize: 14, color: '334155', fontFace: 'Arial', lineSpacing: 18 };
+      // Define common styles
+      const slideTitleOpts = { x: 0.5, y: 0.5, w: 9, fontSize: 24, color: '1e293b', bold: true, fontFace: 'Arial' };
+      const bodyTextOpts = { x: 0.5, y: 1.5, w: 9, fontSize: 14, color: '334155', fontFace: 'Arial', lineSpacing: 18 };
 
-    // --- SLIDE 1: Title Slide ---
-    let slide = pres.addSlide();
-    slide.addText("Impact Assessment Report", { x: 1, y: 2, fontSize: 36, color: '1e293b', bold: true, align: 'center' });
-    slide.addText("CONFIDENTIAL • DRAFT FOR REVIEW", { x: 1, y: 1.5, fontSize: 12, color: '64748b', align: 'center' });
-    slide.addText(policyData.title, { x: 1, y: 3, fontSize: 18, color: '64748b', align: 'center' });
-    slide.addText(`Location: ${policyData.location}  |  Date: ${policyData.date}`, { x: 1, y: 3.5, fontSize: 14, color: '94a3b8', align: 'center' });
-    
-    // --- SLIDE 2: 1.0 Policy Overview ---
-    slide = pres.addSlide();
-    slide.addText("1.0 Policy Overview", slideTitleOpts);
-    
-    const overviewText = `This assessment evaluates the proposed policy changes regarding "${policyData.title}" within the jurisdiction of ${policyData.location}.\n\nThe policy aims to address key urban challenges but initial empathy simulations indicate significant negative externalities for marginalized groups, specifically regarding displacement risks and reduced accessibility to essential services during the implementation phase.`;
-    
-    slide.addText(overviewText, bodyTextOpts);
-    if (policyData.fileName) {
-      slide.addText(`Reference Source: ${policyData.fileName}`, { x: 0.5, y: 4.5, fontSize: 10, italic: true, color: '64748b' });
-    }
-
-    // --- SLIDE 3: 2.0 Key Findings ---
-    slide = pres.addSlide();
-    slide.addText("2.0 Key Findings", slideTitleOpts);
-    
-    // Quote box simulation
-    slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 1.2, w: 9, h: 1.2, fill: { color: 'f8fafc' }, line: { color: '1e293b', width: 3 } });
-    slide.addText(`"The policy as written achieves efficiency goals at the direct expense of equity, with a projected -12% impact on the Quality of Life index for seniors in ${policyData.location}."`, { x: 0.7, y: 1.3, w: 8.6, fontSize: 14, color: '1e293b', italic: true });
-
-    const findingsBullets = [
-      { text: "Economic Displacement: Rental costs in affected zones are projected to rise by 22% within 18 months.", options: { bullet: true, breakLine: true } },
-      { text: "Transit Accessibility: Consolidation of stops increases average walking distance for seniors from 150m to 400m.", options: { bullet: true, breakLine: true } },
-      { text: "Communication Gaps: Digital-first public engagement strategies have failed to reach 65% of non-native English speakers.", options: { bullet: true } }
-    ];
-    
-    slide.addText(findingsBullets, { x: 0.5, y: 3, w: 9, h: 3, fontSize: 14, color: '334155', lineSpacing: 20 });
-
-    // --- SLIDE 4: 3.0 Demographic Impact Matrix ---
-    slide = pres.addSlide();
-    slide.addText("3.0 Demographic Impact Matrix", slideTitleOpts);
-
-    const tableData = [
-      [
-        { text: "Demographic", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }, 
-        { text: "Impact Score", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }, 
-        { text: "Primary Risk", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }
-      ],
-      [
-        { text: "Senior Citizens" }, 
-        { text: "High (92/100)", options: { color: 'b91c1c', bold: true } }, 
-        { text: "Isolation & Healthcare Access" }
-      ],
-      [
-        { text: "Single Parents" }, 
-        { text: "High (88/100)", options: { color: 'b91c1c', bold: true } }, 
-        { text: "Time Poverty & Job Security" }
-      ],
-      [
-        { text: "Low-Income Workers" }, 
-        { text: "Medium (65/100)", options: { color: 'ea580c', bold: true } }, 
-        { text: "Cost of Living Increase" }
-      ]
-    ];
-
-    slide.addTable(tableData, { x: 0.5, y: 1.5, w: 9, border: { pt: 1, color: 'e2e8f0' }, fontSize: 12 });
-
-    // --- SLIDE 5: 4.0 Recommendations ---
-    slide = pres.addSlide();
-    slide.addText("4.0 Recommendations", slideTitleOpts);
-    slide.addText("To align the policy with the city's equity charter, the following modifications are recommended:", { x: 0.5, y: 1.2, fontSize: 14, color: '334155' });
-
-    const recs = [
-      { text: "1. Implement 'Fare Capping' Mechanism", options: { bold: true, breakLine: true, fontSize: 16, color: '0f172a' } },
-      { text: "Introduce a daily and weekly fare cap on public transit to protect low-income commuters from cost spikes associated with new zone transfers.\n", options: { fontSize: 12, color: '475569', breakLine: true } },
+      // --- SLIDE 1: Title Slide ---
+      let slide = pres.addSlide();
+      slide.addText("Impact Assessment Report", { x: 1, y: 2, fontSize: 36, color: '1e293b', bold: true, align: 'center' });
+      slide.addText("CONFIDENTIAL • DRAFT FOR REVIEW", { x: 1, y: 1.5, fontSize: 12, color: '64748b', align: 'center' });
+      slide.addText(policyData.title, { x: 1, y: 3, fontSize: 18, color: '64748b', align: 'center' });
+      slide.addText(`Location: ${policyData.location}  |  Date: ${policyData.date}`, { x: 1, y: 3.5, fontSize: 14, color: '94a3b8', align: 'center' });
       
-      { text: "2. Mandatory Impact-Fee for Developers", options: { bold: true, breakLine: true, fontSize: 16, color: '0f172a' } },
-      { text: "Establish a dedicated fund financed by new developments to subsidize displacement costs for residents aged 65+.\n", options: { fontSize: 12, color: '475569', breakLine: true } },
+      // --- SLIDE 2: 1.0 Policy Overview ---
+      slide = pres.addSlide();
+      slide.addText("1.0 Policy Overview", slideTitleOpts);
+      
+      const overviewText = `This assessment evaluates the proposed policy changes regarding "${policyData.title}" within the jurisdiction of ${policyData.location}.\n\nThe policy aims to address key urban challenges but initial empathy simulations indicate significant negative externalities for marginalized groups, specifically regarding displacement risks and reduced accessibility to essential services during the implementation phase.`;
+      
+      slide.addText(overviewText, bodyTextOpts);
+      if (policyData.fileName) {
+        slide.addText(`Reference Source: ${policyData.fileName}`, { x: 0.5, y: 4.5, fontSize: 10, italic: true, color: '64748b' });
+      }
 
-      { text: "3. Hybrid Engagement Strategy", options: { bold: true, breakLine: true, fontSize: 16, color: '0f172a' } },
-      { text: "Require all public notices to be distributed via mail in English, Spanish, and Vietnamese, alongside digital channels.", options: { fontSize: 12, color: '475569' } }
-    ];
+      // --- SLIDE 3: 2.0 Key Findings ---
+      slide = pres.addSlide();
+      slide.addText("2.0 Key Findings", slideTitleOpts);
+      
+      // Quote box simulation
+      slide.addShape(pres.ShapeType.rect, { x: 0.5, y: 1.2, w: 9, h: 1.2, fill: { color: 'f8fafc' }, line: { color: '1e293b', width: 3 } });
+      slide.addText(`"The policy as written achieves efficiency goals at the direct expense of equity, with a projected -12% impact on the Quality of Life index for seniors in ${policyData.location}."`, { x: 0.7, y: 1.3, w: 8.6, fontSize: 14, color: '1e293b', italic: true });
 
-    slide.addText(recs, { x: 0.5, y: 2, w: 9, h: 4 });
+      const findingsBullets = [
+        { text: "Economic Displacement: Rental costs in affected zones are projected to rise by 22% within 18 months.", options: { bullet: true, breakLine: true } },
+        { text: "Transit Accessibility: Consolidation of stops increases average walking distance for seniors from 150m to 400m.", options: { bullet: true, breakLine: true } },
+        { text: "Communication Gaps: Digital-first public engagement strategies have failed to reach 65% of non-native English speakers.", options: { bullet: true } }
+      ];
+      
+      slide.addText(findingsBullets, { x: 0.5, y: 3, w: 9, h: 3, fontSize: 14, color: '334155', lineSpacing: 20 });
 
-    pres.writeFile({ fileName: `Impact-Report-${new Date().toISOString().split('T')[0]}.pptx` });
+      // --- SLIDE 4: 3.0 Demographic Impact Matrix ---
+      slide = pres.addSlide();
+      slide.addText("3.0 Demographic Impact Matrix", slideTitleOpts);
+
+      const tableData = [
+        [
+          { text: "Demographic", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }, 
+          { text: "Impact Score", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }, 
+          { text: "Primary Risk", options: { bold: true, fill: { color: 'f1f5f9' }, color: '0f172a' } }
+        ],
+        [
+          { text: "Senior Citizens" }, 
+          { text: "High (92/100)", options: { color: 'b91c1c', bold: true } }, 
+          { text: "Isolation & Healthcare Access" }
+        ],
+        [
+          { text: "Single Parents" }, 
+          { text: "High (88/100)", options: { color: 'b91c1c', bold: true } }, 
+          { text: "Time Poverty & Job Security" }
+        ],
+        [
+          { text: "Low-Income Workers" }, 
+          { text: "Medium (65/100)", options: { color: 'ea580c', bold: true } }, 
+          { text: "Cost of Living Increase" }
+        ]
+      ];
+
+      slide.addTable(tableData, { x: 0.5, y: 1.5, w: 9, border: { pt: 1, color: 'e2e8f0' }, fontSize: 12 });
+
+      // --- SLIDE 5: 4.0 Recommendations ---
+      slide = pres.addSlide();
+      slide.addText("4.0 Recommendations", slideTitleOpts);
+      slide.addText("To align the policy with the city's equity charter, the following modifications are recommended:", { x: 0.5, y: 1.2, fontSize: 14, color: '334155' });
+
+      const recs = [
+        { text: "1. Implement 'Fare Capping' Mechanism", options: { bold: true, breakLine: true, fontSize: 16, color: '0f172a' } },
+        { text: "Introduce a daily and weekly fare cap on public transit to protect low-income commuters from cost spikes associated with new zone transfers.\n", options: { fontSize: 12, color: '475569', breakLine: true } },
+        
+        { text: "2. Mandatory Impact-Fee for Developers", options: { bold: true, breakLine: true, fontSize: 16, color: '0f172a' } },
+        { text: "Establish a dedicated fund financed by new developments to subsidize displacement costs for residents aged 65+.\n", options: { fontSize: 12, color: '475569', breakLine: true } },
+
+        { text: "3. Hybrid Engagement Strategy", options: { bold: true, breakLine: true, fontSize: 16, color: '0f172a' } },
+        { text: "Require all public notices to be distributed via mail in English, Spanish, and Vietnamese, alongside digital channels.", options: { fontSize: 12, color: '475569' } }
+      ];
+
+      slide.addText(recs, { x: 0.5, y: 2, w: 9, h: 4 });
+
+      pres.writeFile({ fileName: `Impact-Report-${new Date().toISOString().split('T')[0]}.pptx` });
+    } catch (e) {
+      console.error("PPT Generation Error:", e);
+      alert("Failed to generate PPT.");
+    }
   };
 
   return (
@@ -189,18 +166,6 @@ const ImpactReport: React.FC<ImpactReportProps> = ({ policyData }) => {
               className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors shadow-sm"
             >
               <Presentation className="w-4 h-4" /> Export PPT
-            </button>
-            
-            <button 
-              onClick={handleExportPDF}
-              disabled={isExporting}
-              className={`w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors shadow-sm ${isExporting ? 'opacity-75 cursor-wait' : ''}`}
-            >
-              {isExporting ? 'Generating...' : (
-                <>
-                  <Printer className="w-4 h-4" /> Export PDF
-                </>
-              )}
             </button>
           </div>
         </div>

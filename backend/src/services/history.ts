@@ -6,7 +6,7 @@ const historyStore: HistoryItem[] = [];
 export function addHistoryItem(item: Omit<HistoryItem, 'id' | 'createdAt'>): HistoryItem {
   const newItem: HistoryItem = {
     ...item,
-    id: `hist-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: `hist-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
     createdAt: new Date().toISOString()
   };
   

@@ -223,26 +223,31 @@ export function generateSimulationResponse(policy: PolicyData): SimulationRespon
   // Generate personas based on selected demographics
   const generatedPersonas: Persona[] = demographics.map((demo, index) => {
     const template = demographicTemplates[demo] || defaultTemplate;
-    
+
     // Pick a random quote to make it feel alive
     const quoteFunctions = Array.isArray(template.quotes) ? template.quotes : [template.quotes];
     const randomQuoteFn = quoteFunctions[Math.floor(Math.random() * quoteFunctions.length)];
-    const randomQuote = typeof randomQuoteFn === 'function' 
-      ? randomQuoteFn(location, title)
-      : randomQuoteFn;
-    
+    const randomQuote = typeof randomQuoteFn === 'function' ? randomQuoteFn(location, title) : randomQuoteFn;
+
     // Calculate a dynamic confidence score
     const confidence = 85 + Math.floor(Math.random() * 14);
 
+    // Short, stable id fragment
+    const idFragment = (demo || 'RES').toString().replace(/\s+/g, '').substring(0, 3).toUpperCase();
+    const unique = Math.floor(Math.random() * 9000) + 1000;
+
+    // First two selections are High impact, others Medium
+    const impactLevel = index <= 1 ? 'High' : 'Medium';
+
     return {
-      id: `#${demo.substring(0, 3).toUpperCase()}-${Math.floor(Math.random() * 9000) + 1000}`,
+      id: `#${idFragment}-${unique}`,
       role: template.role,
       iconType: template.iconType,
-      impactLevel: index === 0 ? 'High' : (index === 1 ? 'High' : 'Medium'), // First two selections are High impact
+      impactLevel,
       quote: randomQuote,
       painPoints: template.painPoints,
       adjustments: template.adjustments,
-      confidence: confidence
+      confidence
     };
   });
 

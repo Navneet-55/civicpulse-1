@@ -9,15 +9,15 @@ const router = Router();
 router.post('/simulate', async (req: Request, res: Response) => {
   try {
     const body: SimulateRequest = req.body;
-    
-    if (!body.prompt) {
-      return res.status(400).json({ error: 'Missing prompt field' });
+
+    if (!body || typeof body.prompt !== 'string' || !body.prompt.trim()) {
+      return res.status(400).json({ error: 'Missing or invalid prompt field' });
     }
 
     // Parse the policy data from the prompt string
     let policyData: PolicyData;
     try {
-      policyData = JSON.parse(body.prompt);
+      policyData = JSON.parse(body.prompt.trim());
     } catch (error) {
       return res.status(400).json({ error: 'Invalid JSON in prompt field' });
     }
